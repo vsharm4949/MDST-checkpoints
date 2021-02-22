@@ -17,20 +17,38 @@ Once you are finished with this program, you should run `python preprocess.py` f
 This should load the data, perform preprocessing, and save the output to the data folder.
 
 """
+import pandas as pd
+import numpy as np
 
 def remove_percents(df, col):
+    if pd.api.types.is_string_dtype(df[col]):
+        df[col] = df[col].str.slice(stop=-1).astype(float)
     return df
 
 def fill_zero_iron(df):
+    df['Iron (% DV)'] = df['Iron (% DV)'].fillna(0)
     return df
     
 def fix_caffeine(df):
+    df['Caffeine (mg)'] = df['Caffeine (mg)'].replace("varies", np.NaN)
+    df['Caffeine (mg)'] = df['Caffeine (mg)'].replace("Varies", np.NaN)
+    df['Caffeine (mg)'] = df['Caffeine (mg)'].astype(float)
+    df['Caffeine (mg)'] = df['Caffeine (mg)'].fillna(df['Caffeine (mg)'].mean())
     return df
 
 def standardize_names(df):
+    for i in range(len(df.columns.values)):
+        pos = df.columns.values[i].find('(')
+        if pos != -1:
+            df.columns.values[i] = df.columns.values[i][:pos - 1]
+        df.columns.values[i] = df.columns.values[i].lower()
     return df
 
+
 def fix_strings(df, col):
+    for i in range(len(df[col])):
+        chars = [char.lower() for char in df[col][i] if char.isalpha()]
+        df[col][i] = "".join(chars)
     return df
 
 
@@ -66,7 +84,7 @@ def main():
     
     # now that the data is all clean, save your output to the `data` folder as 'starbucks_clean.csv'
     # you will use this file in checkpoint 2
-    
+    df.to_csv('../data/starbucks_clean.csv')
     
 
 if __name__ == "__main__":
